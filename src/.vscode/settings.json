@@ -1,0 +1,38 @@
+{
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "tabnine.experimentalAutoImports": true,
+    "python.defaultInterpreterPath": "/home/vladvons/VirtEnv/python3.12/bin/python3.12",
+    "pylint.args": [
+        "--disable=invalid-name",
+        "--disable=missing-function-docstring",
+        "--disable=missing-module-docstring",
+        "--disable=missing-class-docstring",
+        "--disable=too-few-public-methods",
+        "--disable=too-many-arguments",
+        "--disable=too-many-locals",
+        "--disable=too-many-instance-attributes",
+        "--disable=too-many-public-methods",
+        "--disable=too-many-branches",
+        "--disable=too-many-nested-blocks",
+        "--disable=line-too-long",
+        "--disable=superfluous-parens",
+        "--disable=consider-using-f-string",
+        "--disable=broad-except"
+    ],
+    "window.zoomLevel": 2,
+    "workbench.tree.indent": 16,
+    "workbench.editor.titleScrollbarSizing": "large",
+    "workbench.colorCustomizations": {
+        "editor.lineHighlightBackground": "#E0FFE020",
+        "tab.activeBorder": "#33FF33"
+    },
+    "files.associations": {
+        "*.j2": "html"
+    },
+    "[j2]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+    }
+}

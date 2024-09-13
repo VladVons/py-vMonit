@@ -1,0 +1,19 @@
+{
+    "sleep": 10,
+    "app": [
+        {
+            "download": { 
+                "url": "https://download.1x1.com.ua/private/update/py-vCrawler_Collector/ver.json",
+                "login": "collector",
+                "password": "col2024",
+                "stop_app": true
+            },
+            "run": {
+                "user": "vladvons",
+                "dir": "/home/vladvons/Projects/py/test1",
+                "cmd": "ping.sh",
+                "process": ""
+            }
+        }
+    ]
+}
