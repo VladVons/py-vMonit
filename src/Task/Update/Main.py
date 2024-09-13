@@ -12,7 +12,7 @@ import subprocess
 from zipfile import ZipFile
 import aiohttp
 #
-from Inc.Util.Obj import DeepGetByList, Iif
+from Inc.Util.Obj import DeepGetByList
 from IncP.Log import Log
 
 
@@ -34,12 +34,9 @@ class TApp():
     def __init__(self, aConf):
         self.Conf = aConf
         self.Process = None
+        self.Chekers = self.GetChekers()
 
-    async def Update(self):
-        Conf = self.Conf.get('download')
-        if (not Conf):
-            return
-
+    async def chk_update(self, aConf: dict):
         DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
         File = f'{DirApp}/ver.json'
         if (not os.path.exists(File)):
@@ -53,9 +50,9 @@ class TApp():
             except Exception as E:
                 Log.Print(1, 'x', 'Err. Download()', aE=E)
 
-        UrlData = await UrlGetData(Conf['url'], Conf.get('login'), Conf.get('password'))
+        UrlData = await UrlGetData(aConf['url'], aConf.get('login'), aConf.get('password'))
         if (UrlData['status'] != 200):
-            Log.Print(1, 'i', f'Err. Download(). Url {Conf["url"]}, code {UrlData["status"]}')
+            Log.Print(1, 'i', f'Err. Download(). Url {aConf["url"]}, code {UrlData["status"]}')
             return
 
         try:
@@ -67,10 +64,10 @@ class TApp():
         if (LastVer == CurVer):
             return
 
-        UrlRoot = Conf['url'].rsplit('/', maxsplit=1)[0]
+        UrlRoot = aConf['url'].rsplit('/', maxsplit=1)[0]
         for xUnpack in Info.get('unpack', []):
             UrlFile = f'{UrlRoot}/{xUnpack[0]}'
-            UrlData = await UrlGetData(UrlFile, Conf.get('login'), Conf.get('password'))
+            UrlData = await UrlGetData(UrlFile, aConf.get('login'), aConf.get('password'))
             if (UrlData['status'] == 200):
                 with ZipFile(io.BytesIO(UrlData['data'])) as HZip:
                     Path = DirApp
@@ -85,38 +82,62 @@ class TApp():
             Data = {'ver': Info['ver']}
             json.dump(Data, F)
 
-        if (self.Process) and (Conf.get('stop_app')):
-            self.Process.terminate()
-            self.Process.wait()
+        if (aConf.get('stop_app')):
+            await self.Stop()
 
-
-    def Run(self):
-        Conf = self.Conf.get('run')
-        if (not Conf):
-            return
-
-        Dir = Conf['dir']
+    async def chk_run(self, aConf: dict):
+        Dir = aConf['dir']
         if (not os.path.isdir(Dir)):
             Log.Print(1, 'e', f'Err. Dir not exists {Dir}')
             return
 
-        Cmd = re.split(r'\s+', Conf['cmd'])
-        Cmd[0] = f'{Dir}/{Cmd[0]}'
-        try:
-            self.Process = subprocess.Popen(
-                Cmd,
-                cwd=Dir,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-        except Exception as E:
+        if (not self.Process) or (self.Process and self.Process.poll()):
+            Cmd = re.split(r'\s+', aConf['cmd'])
+            Cmd[0] = f'{Dir}/{Cmd[0]}'
+            try:
+                self.Process = subprocess.Popen(
+                    Cmd,
+                    cwd=Dir,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+                Log.Print(1, 'i', f'Running {Cmd}')
+            except Exception as E:
+                self.Process = None
+                Log.Print(1, 'x', str(E))
+
+    def GetChekers(self) -> dict:
+        Res = {}
+        Prefix = 'chk_'
+        for xMethod in dir(self):
+            if (xMethod.startswith(Prefix)):
+                Name = xMethod.replace(Prefix, '')
+                Conf = self.Conf.get(Name)
+                if (Conf):
+                    if (not 'sleep' in Conf):
+                        Conf['sleep'] = self.Conf.get('sleep', 60)
+
+                    Res[Name] = {
+                        'timer': 0,
+                        'method': getattr(self, xMethod),
+                        'conf': Conf
+                    }
+        return Res
+
+    async def Stop(self):
+        if (self.Process):
+            self.Process.terminate()
+            self.Process.wait()
+            await asyncio.sleep(3)
             self.Process = None
-            Log.Print(1, 'x', str(E))
 
     async def Check(self):
-        await self.Update()
-        self.Run()
+        for xKey, xVal in self.Chekers.items():
+            xVal['timer'] += 1
+            if (xVal['timer'] >= xVal['conf']['sleep']):
+                xVal['timer'] = 0
+                await xVal['method'](xVal['conf'])
 
 
 class TUpdate():
@@ -132,4 +153,4 @@ class TUpdate():
         while True:
             for xApp in self.Apps:
                 await xApp.Check()
-                await asyncio.sleep(self.Conf.get('sleep', 60))
+                await asyncio.sleep(1)
