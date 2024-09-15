@@ -71,20 +71,13 @@ class TApp():
     async def _Unpack(self, aConf: dict, aFiles: list[str]) -> bool:
         Res = True
 
+        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
         UrlRoot = aConf['url'].rsplit('/', maxsplit=1)[0]
-        for xUnpack in aFiles:
-            File = xUnpack[0]
-            if (File.startswith('-')):
-                continue
-
-            UrlFile = f'{UrlRoot}/{File}'
+        for xFile in aFiles:
+            UrlFile = f'{UrlRoot}/{xFile}'
             UrlData = await UrlGetData(UrlFile, aConf.get('login'), aConf.get('password'))
             if (UrlData['status'] == 200):
-                DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
-                if (len(xUnpack) == 2):
-                    DirApp += xUnpack[1]
-                Ext = File.rsplit('.', maxsplit=1)[-1].lower()
-
+                Ext = xFile.rsplit('.', maxsplit=1)[-1].lower()
                 try:
                     self._UnpackData(UrlData['data'], Ext, DirApp)
                 except Exception as E:
@@ -156,10 +149,11 @@ class TApp():
             return
 
         LastVer = DeepGetByList(Remote, ['ver', 'release'], '').strip()
-        if (LastVer <= CurVer):
+        if (LastVer == CurVer):
             return
 
-        if (not await self._Unpack(aConf, Remote.get('unpack', []))):
+        Items = self._HasComment(Remote.get('unpack', []))
+        if (not await self._Unpack(aConf, Items)):
             return
 
         Items = self._HasComment(Remote.get('py_pkg', []))
