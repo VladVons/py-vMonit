@@ -1,9 +1,0 @@
-2024-09-15, 23:45:55, 1, 1, i, os: Linux, 6.8.0-44-generic, x86_64, python: (3, 12, 3), uptime: 1 days, 4 hours
-2024-09-15, 23:45:55, 2, 1, i, Run() vMonit
-2024-09-15, 23:45:57, 3, 1, i, Add task Update
-2024-09-15, 23:46:03, 4, 1, i, Add app Crawler collect  bot
-2024-09-15, 23:47:48, 1, 1, i, os: Linux, 6.8.0-44-generic, x86_64, python: (3, 12, 3), uptime: 1 days, 4 hours
-2024-09-15, 23:47:48, 2, 1, i, Run() vMonit
-2024-09-15, 23:47:51, 3, 1, i, Add task Update
-2024-09-15, 23:47:53, 4, 1, i, Add app Crawler collect bot
-2024-09-15, 23:47:58, 5, 1, i, Add app vMonit itself
