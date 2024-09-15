@@ -6,4 +6,7 @@ echo $File
 source $File
 
 #$py -V
-$py -B vMonit.py
+while true; do
+    $py -B vMonit.py
+    sleep 5
+done

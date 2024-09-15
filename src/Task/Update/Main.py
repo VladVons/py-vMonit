@@ -17,12 +17,22 @@ from Inc.Util.Obj import DeepGetByList
 from IncP.Log import Log
 
 
-
 class TApp():
     def __init__(self, aConf):
         self.Conf = aConf
         self.Process = None
         self.Chekers = self._GetChekers()
+
+    @staticmethod
+    def SysExec(aCmd: str):
+        Cmd = re.split(r'\s+', aCmd)
+        try:
+            Res = subprocess.run(Cmd, capture_output=True, text=True, check=True)
+            return Res
+        except FileNotFoundError as E:
+            Log.Print(1, 'i', f'Err. SysExec(). {E.strerror} {E.filename}')
+        except subprocess.CalledProcessError as _E:
+            Log.Print(1, 'i', f'Err. SysExec(). {aCmd}')
 
     def _GetChekers(self) -> dict:
         Res = {}
@@ -42,43 +52,67 @@ class TApp():
                     }
         return Res
 
-    async def _Unpack(self, aConf: dict, aFiles: list[str]):
-        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
+    async def _Unpack(self, aConf: dict, aFiles: list[str]) -> bool:
+        Res = True
 
+        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
         UrlRoot = aConf['url'].rsplit('/', maxsplit=1)[0]
         for xUnpack in aFiles:
             UrlFile = f'{UrlRoot}/{xUnpack[0]}'
             UrlData = await UrlGetData(UrlFile, aConf.get('login'), aConf.get('password'))
             if (UrlData['status'] == 200):
-                with ZipFile(io.BytesIO(UrlData['data'])) as HZip:
-                    Path = DirApp
-                    if (len(xUnpack) == 2):
-                        DirApp += xUnpack[1]
-                    HZip.extractall(path=Path)
+                try:
+                    with ZipFile(io.BytesIO(UrlData['data'])) as HZip:
+                        Path = DirApp
+                        if (len(xUnpack) == 2):
+                            DirApp += xUnpack[1]
+                        HZip.extractall(path=Path)
+                except Exception as E:
+                    Log.Print(1, 'x', 'Err. Unzip', aE=E)
+                    Res = False
             else:
                 Log.Print(1, 'i', f'Err. Download(). Url {UrlFile}, code {UrlData["status"]}')
-                return
+                Res = False
+        return Res
 
-    def _PyPkg(self, aPyPkg: list[str]):
-        Data = subprocess.run([sys.executable, '-m', 'pip', 'freeze'], capture_output=True, text=True)
-        Installed = Data.stdout.splitlines()
-        for xPkg in aPyPkg:
-            if (xPkg not in Installed):
-                subprocess.check_call([sys.executable, '-m', 'pip', 'install', xPkg])
+    def _PyPkg(self, aPyPkg: list[str]) -> bool:
+        def Normalize(aVal: str) -> str:
+            return aVal.replace('_', '-').lower().strip()
+
+        Res = True
+        Data = self.SysExec(f'{sys.executable} -m pip freeze')
+        if (Data):
+            Installed = [Normalize(xPkg.split('==')[0]) for xPkg in Data.stdout.splitlines()]
+            for xPkg in aPyPkg:
+                xPkg = Normalize(xPkg)
+                if (xPkg not in Installed):
+                    Data = self.SysExec(f'{sys.executable} -m pip install {xPkg}')
+                    if (not Data):
+                        Res = False
+        else:
+            Res = False
+
+        return Res
 
     async def chk_update(self, aConf: dict):
         DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
-        File = f'{DirApp}/ver.json'
-        if (not os.path.exists(File)):
-            Log.Print(1, 'i', f'Err. Download(). File not found {File}')
+        if (not DirApp):
+            Descr = DeepGetByList(self.Conf, ['info', 'descr'], '')
+            Log.Print(1, 'i', f'Err. `run/dir` is undefined. {Descr}')
             return
 
-        with open(File, 'r', encoding='utf8') as F:
-            try:
-                Data = json.load(F)
-                CurVer = DeepGetByList(Data, ['ver', 'release'], '').strip()
-            except Exception as E:
-                Log.Print(1, 'x', 'Err. Download()', aE=E)
+        File = f'{DirApp}/ver.json'
+        if (os.path.exists(File)):
+            #Log.Print(1, 'i', f'Err. Download(). File not found {File}')
+
+            with open(File, 'r', encoding='utf8') as F:
+                try:
+                    Data = json.load(F)
+                    CurVer = DeepGetByList(Data, ['ver', 'release'], '').strip()
+                except Exception as E:
+                    Log.Print(1, 'x', 'Err. Download()', aE=E)
+        else:
+            CurVer = '0.0.0'
 
         UrlData = await UrlGetData(aConf['url'], aConf.get('login'), aConf.get('password'))
         if (UrlData['status'] != 200):
@@ -88,21 +122,32 @@ class TApp():
         try:
             Info = json.loads(UrlData['data'])
         except Exception as E:
-            Log.Print(1, 'x', 'Err. Download()', aE=E)
-
-        LastVer = DeepGetByList(Info, ['ver', 'release'], '').strip()
-        if (LastVer == CurVer):
+            Log.Print(1, 'x', 'Err. Download(). Json format', aE=E)
             return
 
-        await self._Unpack(aConf, Info.get('unpack', []))
-        await self._PyPkg(Info.get('py_pkg', []))
+        LastVer = DeepGetByList(Info, ['ver', 'release'], '').strip()
+        if (LastVer <= CurVer):
+            return
+
+        if (not await self._Unpack(aConf, Info.get('unpack', []))):
+            return
+
+        if (not self._PyPkg(Info.get('py_pkg', []))):
+            return
 
         with open(File, 'w', encoding='utf8') as F:
             Data = {'ver': Info['ver']}
             json.dump(Data, F)
+        Log.Print(1, 'i', f'chk_update(). Updated to {LastVer}')
 
-        if (aConf.get('stop_app')):
-            await self.Stop()
+        Action = aConf.get('action', '').lower()
+        if (Action == 'stop'):
+            Main = getattr(sys.modules['__main__'], '__file__')
+            Path = os.path.dirname(Main)
+            if (DirApp == Path):
+                sys.exit()
+            else:
+                await self.Stop()
 
     async def chk_run(self, aConf: dict):
         Dir = aConf['dir']
@@ -110,7 +155,7 @@ class TApp():
             Log.Print(1, 'e', f'Err. Dir not exists {Dir}')
             return
 
-        if (not self.IsRun()):
+        if ('cmd' in aConf) and (not self.IsRun()):
             Cmd = re.split(r'\s+', aConf['cmd'])
             Cmd[0] = f'{Dir}/{Cmd[0]}'
             try:
@@ -139,7 +184,7 @@ class TApp():
             await asyncio.sleep(3)
 
     async def Check(self):
-        for xKey, xVal in self.Chekers.items():
+        for _xKey, xVal in self.Chekers.items():
             xVal['timer'] += 1
             if (xVal['timer'] >= xVal['conf']['sleep']):
                 xVal['timer'] = 0
@@ -153,8 +198,12 @@ class TUpdate():
 
     async def Run(self, _aParam: dict = None):
         for xApp in self.Conf['app']:
-            App = TApp(xApp)
-            self.Apps.append(App)
+            if (DeepGetByList(xApp, ['info', 'enabled'], True)):
+                Descr = DeepGetByList(xApp, ['info', 'descr'])
+                if (Descr):
+                    Log.Print(1, 'i', f'Add app {Descr}')
+                App = TApp(xApp)
+                self.Apps.append(App)
 
         while True:
             for xApp in self.Apps:

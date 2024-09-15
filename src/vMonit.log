@@ -1,53 +1,9 @@
-2024-09-14, 05:38:25, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 12 hours
-2024-09-14, 05:38:25, 2, 1, i, Run() vMonit
-2024-09-14, 05:38:25, 3, 1, i, Add task Update
-2024-09-14, 05:38:29, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']
-2024-09-14, 05:38:38, 5, 1, i, End. Time 12.91
-2024-09-14, 08:08:39, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:08:53, 2, 1, i, Run() vMonit
-2024-09-14, 08:09:45, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:09:45, 2, 1, i, Run() vMonit
-2024-09-14, 08:09:47, 3, 1, i, Add task Update
-2024-09-14, 08:10:15, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']
-2024-09-14, 08:10:27, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:10:27, 2, 1, i, Run() vMonit
-2024-09-14, 08:10:29, 3, 1, i, Add task Update
-2024-09-14, 08:10:33, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']
-2024-09-14, 08:10:41, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:10:41, 2, 1, i, Run() vMonit
-2024-09-14, 08:10:43, 3, 1, i, Add task Update
-2024-09-14, 08:11:17, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:11:17, 2, 1, i, Run() vMonit
-2024-09-14, 08:11:20, 3, 1, i, Add task Update
-2024-09-14, 08:12:47, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:12:47, 2, 1, i, Run() vMonit
-2024-09-14, 08:12:49, 3, 1, i, Add task Update
-2024-09-14, 08:13:13, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']
-2024-09-14, 08:15:01, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:15:01, 2, 1, i, Run() vMonit
-2024-09-14, 08:15:03, 3, 1, i, Add task Update
-2024-09-14, 08:15:34, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:15:34, 2, 1, i, Run() vMonit
-2024-09-14, 08:15:36, 3, 1, i, Add task Update
-2024-09-14, 08:15:47, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']
-2024-09-14, 08:17:10, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:17:10, 2, 1, i, Run() vMonit
-2024-09-14, 08:17:12, 3, 1, i, Add task Update
-2024-09-14, 08:17:31, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']
-2024-09-14, 08:18:04, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:18:04, 2, 1, i, Run() vMonit
-2024-09-14, 08:18:07, 3, 1, i, Add task Update
-2024-09-14, 08:18:37, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']
-2024-09-14, 08:20:45, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 14 hours
-2024-09-14, 08:20:45, 2, 1, i, Run() vMonit
-2024-09-14, 08:20:47, 3, 1, i, Add task Update
-2024-09-14, 08:21:23, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']. pid 245155
-2024-09-14, 08:22:07, 5, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']. pid 245298
-2024-09-14, 08:37:56, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 15 hours
-2024-09-14, 08:37:56, 2, 1, i, Run() vMonit
-2024-09-14, 08:37:58, 3, 1, i, Add task Update
-2024-09-14, 08:38:12, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']. pid 248077
-2024-09-14, 08:38:17, 1, 1, i, os: Linux, 6.8.0-40-generic, x86_64, python: (3, 12, 6), uptime: 1 days, 15 hours
-2024-09-14, 08:38:17, 2, 1, i, Run() vMonit
-2024-09-14, 08:38:19, 3, 1, i, Add task Update
-2024-09-14, 08:38:23, 4, 1, i, Running ['/home/vladvons/Projects/py/test1/ping.sh']. pid 248218
+2024-09-15, 23:45:55, 1, 1, i, os: Linux, 6.8.0-44-generic, x86_64, python: (3, 12, 3), uptime: 1 days, 4 hours
+2024-09-15, 23:45:55, 2, 1, i, Run() vMonit
+2024-09-15, 23:45:57, 3, 1, i, Add task Update
+2024-09-15, 23:46:03, 4, 1, i, Add app Crawler collect  bot
+2024-09-15, 23:47:48, 1, 1, i, os: Linux, 6.8.0-44-generic, x86_64, python: (3, 12, 3), uptime: 1 days, 4 hours
+2024-09-15, 23:47:48, 2, 1, i, Run() vMonit
+2024-09-15, 23:47:51, 3, 1, i, Add task Update
+2024-09-15, 23:47:53, 4, 1, i, Add app Crawler collect bot
+2024-09-15, 23:47:58, 5, 1, i, Add app vMonit itself
