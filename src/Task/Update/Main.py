@@ -5,36 +5,66 @@
 
 import io
 import os
+import sys
 import re
 import json
 import asyncio
 import subprocess
 from zipfile import ZipFile
-import aiohttp
 #
+from Inc.Misc.aiohttpClient import UrlGetData
 from Inc.Util.Obj import DeepGetByList
 from IncP.Log import Log
 
-
-async def UrlGetData(aUrl: str, aLogin: str = None, aPassword: str = None):
-    if (aLogin and aPassword):
-        Auth = aiohttp.BasicAuth(login=aLogin, password=aPassword)
-
-    async with aiohttp.ClientSession(auth=Auth) as session:
-        async with session.get(aUrl) as Response:
-            if (Response.status == 200):
-                Data = await Response.read()
-                Res = {'status': Response.status, 'data': Data}
-            else:
-                Res = {'status': Response.status}
-    return Res
 
 
 class TApp():
     def __init__(self, aConf):
         self.Conf = aConf
         self.Process = None
-        self.Chekers = self.GetChekers()
+        self.Chekers = self._GetChekers()
+
+    def _GetChekers(self) -> dict:
+        Res = {}
+        Prefix = 'chk_'
+        for xMethod in dir(self):
+            if (xMethod.startswith(Prefix)):
+                Name = xMethod.replace(Prefix, '')
+                Conf = self.Conf.get(Name)
+                if (Conf):
+                    if (not 'sleep' in Conf):
+                        Conf['sleep'] = self.Conf.get('sleep', 60)
+
+                    Res[Name] = {
+                        'timer': 0,
+                        'method': getattr(self, xMethod),
+                        'conf': Conf
+                    }
+        return Res
+
+    async def _Unpack(self, aConf: dict, aFiles: list[str]):
+        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
+
+        UrlRoot = aConf['url'].rsplit('/', maxsplit=1)[0]
+        for xUnpack in aFiles:
+            UrlFile = f'{UrlRoot}/{xUnpack[0]}'
+            UrlData = await UrlGetData(UrlFile, aConf.get('login'), aConf.get('password'))
+            if (UrlData['status'] == 200):
+                with ZipFile(io.BytesIO(UrlData['data'])) as HZip:
+                    Path = DirApp
+                    if (len(xUnpack) == 2):
+                        DirApp += xUnpack[1]
+                    HZip.extractall(path=Path)
+            else:
+                Log.Print(1, 'i', f'Err. Download(). Url {UrlFile}, code {UrlData["status"]}')
+                return
+
+    def _PyPkg(self, aPyPkg: list[str]):
+        Data = subprocess.run([sys.executable, '-m', 'pip', 'freeze'], capture_output=True, text=True)
+        Installed = Data.stdout.splitlines()
+        for xPkg in aPyPkg:
+            if (xPkg not in Installed):
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', xPkg])
 
     async def chk_update(self, aConf: dict):
         DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
@@ -64,19 +94,8 @@ class TApp():
         if (LastVer == CurVer):
             return
 
-        UrlRoot = aConf['url'].rsplit('/', maxsplit=1)[0]
-        for xUnpack in Info.get('unpack', []):
-            UrlFile = f'{UrlRoot}/{xUnpack[0]}'
-            UrlData = await UrlGetData(UrlFile, aConf.get('login'), aConf.get('password'))
-            if (UrlData['status'] == 200):
-                with ZipFile(io.BytesIO(UrlData['data'])) as HZip:
-                    Path = DirApp
-                    if (len(xUnpack) == 2):
-                        DirApp += xUnpack[1]
-                    HZip.extractall(path=Path)
-            else:
-                Log.Print(1, 'i', f'Err. Download(). Url {UrlFile}, code {UrlData["status"]}')
-                return
+        await self._Unpack(aConf, Info.get('unpack', []))
+        await self._PyPkg(Info.get('py_pkg', []))
 
         with open(File, 'w', encoding='utf8') as F:
             Data = {'ver': Info['ver']}
@@ -91,7 +110,7 @@ class TApp():
             Log.Print(1, 'e', f'Err. Dir not exists {Dir}')
             return
 
-        if (not self.Process) or (self.Process and self.Process.poll()):
+        if (not self.IsRun()):
             Cmd = re.split(r'\s+', aConf['cmd'])
             Cmd[0] = f'{Dir}/{Cmd[0]}'
             try:
@@ -102,35 +121,22 @@ class TApp():
                     stderr=subprocess.PIPE,
                     text=True
                 )
-                Log.Print(1, 'i', f'Running {Cmd}')
+                Log.Print(1, 'i', f'Running {Cmd}. pid {self.Process.pid}')
             except Exception as E:
                 self.Process = None
                 Log.Print(1, 'x', str(E))
 
-    def GetChekers(self) -> dict:
-        Res = {}
-        Prefix = 'chk_'
-        for xMethod in dir(self):
-            if (xMethod.startswith(Prefix)):
-                Name = xMethod.replace(Prefix, '')
-                Conf = self.Conf.get(Name)
-                if (Conf):
-                    if (not 'sleep' in Conf):
-                        Conf['sleep'] = self.Conf.get('sleep', 60)
-
-                    Res[Name] = {
-                        'timer': 0,
-                        'method': getattr(self, xMethod),
-                        'conf': Conf
-                    }
-        return Res
+    def IsRun(self):
+        return (self.Process is not None) and (not self.Process.poll())
 
     async def Stop(self):
         if (self.Process):
             self.Process.terminate()
             self.Process.wait()
-            await asyncio.sleep(3)
+
+            Log.Print(1, 'i', f'Stop {self.Process.args}')
             self.Process = None
+            await asyncio.sleep(3)
 
     async def Check(self):
         for xKey, xVal in self.Chekers.items():
