@@ -14,6 +14,7 @@ import tarfile
 from zipfile import ZipFile
 #
 from Inc.Misc.aiohttpClient import UrlGetData
+from Inc.Misc.FS import DirRemove
 from Inc.Util.Obj import DeepGetByList
 from IncP.Log import Log
 
@@ -54,6 +55,10 @@ class TApp():
         return Res
 
     @staticmethod
+    def _HasComment(aData: list[str]) -> list[str]:
+        return [x for x in aData if not x.startswith('-')]
+
+    @staticmethod
     def _UnpackData(aData: str, aExt: str, aDirDst: str):
         Data = io.BytesIO(aData)
         if (aExt == 'gz'):
@@ -68,13 +73,17 @@ class TApp():
 
         UrlRoot = aConf['url'].rsplit('/', maxsplit=1)[0]
         for xUnpack in aFiles:
-            UrlFile = f'{UrlRoot}/{xUnpack[0]}'
+            File = xUnpack[0]
+            if (File.startswith('-')):
+                continue
+
+            UrlFile = f'{UrlRoot}/{File}'
             UrlData = await UrlGetData(UrlFile, aConf.get('login'), aConf.get('password'))
             if (UrlData['status'] == 200):
                 DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
                 if (len(xUnpack) == 2):
                     DirApp += xUnpack[1]
-                Ext = xUnpack[0].rsplit('.', maxsplit=1)[-1].lower()
+                Ext = File.rsplit('.', maxsplit=1)[-1].lower()
 
                 try:
                     self._UnpackData(UrlData['data'], Ext, DirApp)
@@ -105,6 +114,16 @@ class TApp():
 
         return Res
 
+    def _Remove(self, aFiles: list[str]):
+        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
+        for xFile in aFiles:
+            Path = f'{DirApp}/{xFile}'
+            if (os.path.exists(Path)):
+                if os.path.isfile(Path):
+                    os.remove(Path)
+                elif os.path.isdir(Path):
+                    DirRemove(Path)
+
     async def chk_update(self, aConf: dict):
         DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
         if (not DirApp):
@@ -131,23 +150,27 @@ class TApp():
             return
 
         try:
-            Info = json.loads(UrlData['data'])
+            Remote = json.loads(UrlData['data'])
         except Exception as E:
             Log.Print(1, 'x', 'Err. Download(). Json format', aE=E)
             return
 
-        LastVer = DeepGetByList(Info, ['ver', 'release'], '').strip()
+        LastVer = DeepGetByList(Remote, ['ver', 'release'], '').strip()
         if (LastVer <= CurVer):
             return
 
-        if (not await self._Unpack(aConf, Info.get('unpack', []))):
+        if (not await self._Unpack(aConf, Remote.get('unpack', []))):
             return
 
-        if (not self._PyPkg(Info.get('py_pkg', []))):
+        Items = self._HasComment(Remote.get('py_pkg', []))
+        if (not self._PyPkg(Items)):
             return
+
+        Items = self._HasComment(Remote.get('remove', []))
+        self._Remove(Items)
 
         with open(File, 'w', encoding='utf8') as F:
-            Data = {'ver': Info['ver']}
+            Data = {'ver': Remote['ver']}
             json.dump(Data, F)
         Log.Print(1, 'i', f'chk_update(). Updated to {LastVer}')
 
