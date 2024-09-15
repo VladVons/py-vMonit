@@ -10,6 +10,7 @@ import re
 import json
 import asyncio
 import subprocess
+import tarfile
 from zipfile import ZipFile
 #
 from Inc.Misc.aiohttpClient import UrlGetData
@@ -46,27 +47,37 @@ class TApp():
                         Conf['sleep'] = self.Conf.get('sleep', 60)
 
                     Res[Name] = {
-                        'timer': 0,
+                        'timer': -Conf.get('delay', 2),
                         'method': getattr(self, xMethod),
                         'conf': Conf
                     }
         return Res
 
+    @staticmethod
+    def _UnpackData(aData: str, aExt: str, aDirDst: str):
+        Data = io.BytesIO(aData)
+        if (aExt == 'gz'):
+            with tarfile.open(fileobj=Data, mode='r:gz') as HTar:
+                HTar.extractall(path=aDirDst)
+        elif (aExt == 'zip'):
+            with ZipFile(Data) as HZip:
+                HZip.extractall(path=aDirDst)
+
     async def _Unpack(self, aConf: dict, aFiles: list[str]) -> bool:
         Res = True
 
-        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
         UrlRoot = aConf['url'].rsplit('/', maxsplit=1)[0]
         for xUnpack in aFiles:
             UrlFile = f'{UrlRoot}/{xUnpack[0]}'
             UrlData = await UrlGetData(UrlFile, aConf.get('login'), aConf.get('password'))
             if (UrlData['status'] == 200):
+                DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
+                if (len(xUnpack) == 2):
+                    DirApp += xUnpack[1]
+                Ext = xUnpack[0].rsplit('.', maxsplit=1)[-1].lower()
+
                 try:
-                    with ZipFile(io.BytesIO(UrlData['data'])) as HZip:
-                        Path = DirApp
-                        if (len(xUnpack) == 2):
-                            DirApp += xUnpack[1]
-                        HZip.extractall(path=Path)
+                    self._UnpackData(UrlData['data'], Ext, DirApp)
                 except Exception as E:
                     Log.Print(1, 'x', 'Err. Unzip', aE=E)
                     Res = False
@@ -185,11 +196,10 @@ class TApp():
 
     async def Check(self):
         for _xKey, xVal in self.Chekers.items():
-            xVal['timer'] += 1
-            if (xVal['timer'] >= xVal['conf']['sleep']):
+            if (xVal['timer'] == -1) or (xVal['timer'] >= xVal['conf']['sleep']):
                 xVal['timer'] = 0
                 await xVal['method'](xVal['conf'])
-
+            xVal['timer'] += 1
 
 class TUpdate():
     def __init__(self, aConf):

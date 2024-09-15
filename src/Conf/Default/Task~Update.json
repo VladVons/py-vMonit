@@ -1,5 +1,4 @@
 {
-  "sleep": 60,
   "app": [
     {
       "info": {
@@ -10,12 +9,14 @@
         "url": "https://download.1x1.com.ua/private/update/py-vCrawler_Collector/ver.json",
         "login": "collector",
         "password": "col2024",
-        "action": "stop"
+        "action": "stop",
+        "sleep": 10
       },
       "run": {
         "dir": "/home/vladvons/Projects/py/test1",
         "cmd": "ping.sh",
-        "sleep": 5
+        "sleep": 5,
+        "delay": 3
       }
     },
     {
@@ -26,7 +27,8 @@
         "url": "https://download.1x1.com.ua/private/update/py-vMonit/ver.json",
         "login": "collector",
         "password": "col2024",
-        "action": "stop"
+        "action": "stop",
+        "sleep": 10
       },
       "run": {
         "dir": "/home/vladvons/Projects/py/py-vMonit/src"
