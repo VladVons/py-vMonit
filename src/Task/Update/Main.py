@@ -121,7 +121,11 @@ class TApp():
         DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
         if (not DirApp):
             Descr = DeepGetByList(self.Conf, ['info', 'descr'], '')
-            Log.Print(1, 'i', f'Err. `run/dir` is undefined. {Descr}')
+            Log.Print(1, 'i', f'Err. chk_update(). `run/dir` is undefined. {Descr}')
+            return
+
+        if (not os.path.isdir(DirApp)):
+            Log.Print(1, 'i', f'Err. chk_update(). Dir not exists {DirApp}')
             return
 
         File = f'{DirApp}/ver.json'
@@ -133,19 +137,19 @@ class TApp():
                     Data = json.load(F)
                     CurVer = DeepGetByList(Data, ['ver', 'release'], '').strip()
                 except Exception as E:
-                    Log.Print(1, 'x', 'Err. Download()', aE=E)
+                    Log.Print(1, 'x', 'Err. chk_update(). Json format', aE=E)
         else:
             CurVer = '0.0.0'
 
         UrlData = await UrlGetData(aConf['url'], aConf.get('login'), aConf.get('password'))
         if (UrlData['status'] != 200):
-            Log.Print(1, 'i', f'Err. Download(). Url {aConf["url"]}, code {UrlData["status"]}')
+            Log.Print(1, 'i', f'Err. chk_update(). Url {aConf["url"]}, code {UrlData["status"]}')
             return
 
         try:
             Remote = json.loads(UrlData['data'])
         except Exception as E:
-            Log.Print(1, 'x', 'Err. Download(). Json format', aE=E)
+            Log.Print(1, 'x', 'Err. chk_update(). Json format', aE=E)
             return
 
         LastVer = DeepGetByList(Remote, ['ver', 'release'], '').strip()
@@ -173,6 +177,7 @@ class TApp():
             Main = getattr(sys.modules['__main__'], '__file__')
             Path = os.path.dirname(Main)
             if (DirApp == Path):
+                Log.Print(1, 'i', f'Exit {Main}')
                 sys.exit()
             else:
                 await self.Stop()
@@ -180,7 +185,7 @@ class TApp():
     async def chk_run(self, aConf: dict):
         Dir = aConf['dir']
         if (not os.path.isdir(Dir)):
-            Log.Print(1, 'e', f'Err. Dir not exists {Dir}')
+            Log.Print(1, 'e', f'Err. chk_run(). Dir not exists {Dir}')
             return
 
         if ('cmd' in aConf) and (not self.IsRun()):
@@ -194,7 +199,7 @@ class TApp():
                     stderr=subprocess.PIPE,
                     text=True
                 )
-                Log.Print(1, 'i', f'Running {Cmd}. pid {self.Process.pid}')
+                Log.Print(1, 'i', f'chk_run(). Running {Cmd}. pid {self.Process.pid}')
             except Exception as E:
                 self.Process = None
                 Log.Print(1, 'x', str(E))
