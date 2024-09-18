@@ -1,6 +1,6 @@
 #!/bin/bash
 
-py=python3.12
+py=python3
 File=~/virt/$py/bin/activate
 echo $File
 source $File
