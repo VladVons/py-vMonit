@@ -157,6 +157,7 @@ GitNewBranch()
 
 
 clear
+echo "Repository: $cUrl"
 case $1 in
     Clean)              "$1"        "$2" "$3" ;;
     GitAuth)            "$1"        "$2" "$3" ;;
