@@ -3,32 +3,34 @@
     {
       "info": {
         "descr": "Crawler collect bot",
-        "enabled": false
+        "enabled": true
       },
       "update": { 
-        "url": "https://download.1x1.com.ua/private/update/py-vCrawler/ver.json",
+        "url": "https://download.1x1.com.ua/private/update/py-vCrawler",
         "login": "collector",
         "password": "col2024",
         "action": "stop",
-        "sleep": 10
+        "sleep": 360,
+        "create_dir": true
       },
       "run": {
         "dir": "/root/projects/vCrawler",
         "cmd": "vCrawler.sh",
-        "sleep": 5,
-        "delay": 3
+        "sleep": 30,
+        "delay": 5
       }
     },
     {
       "info": {
-        "descr": "vMonit itself"
+        "descr": "vMonit itself",
+        "enabled": true
       },
       "update": { 
-        "url": "https://download.1x1.com.ua/private/update/py-vMonit/ver.json",
+        "url": "https://download.1x1.com.ua/private/update/py-vMonit",
         "login": "collector",
         "password": "col2024",
         "action": "stop",
-        "sleep": 10
+        "sleep": 360
       },
       "run": {
         "dir": "/root/projects/vMonit"

@@ -14,7 +14,7 @@ import tarfile
 from zipfile import ZipFile
 #
 from Inc.Misc.aiohttpClient import UrlGetData
-from Inc.Misc.FS import DirRemove
+from Inc.Misc.FS import DirRemove, WriteFileTyped
 from Inc.Util.Obj import DeepGetByList
 from IncP.Log import Log
 
@@ -23,7 +23,9 @@ class TApp():
     def __init__(self, aConf):
         self.Conf = aConf
         self.Process = None
+        self.FileVer = 'ver.json'
         self.Chekers = self._GetChekers()
+        self.DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
 
     @staticmethod
     def SysExec(aCmd: str):
@@ -70,16 +72,13 @@ class TApp():
 
     async def _Unpack(self, aConf: dict, aFiles: list[str]) -> bool:
         Res = True
-
-        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
-        UrlRoot = aConf['url'].rsplit('/', maxsplit=1)[0]
         for xFile in aFiles:
-            UrlFile = f'{UrlRoot}/{xFile}'
+            UrlFile = f'{aConf["url"]}/{xFile}'
             UrlData = await UrlGetData(UrlFile, aConf.get('login'), aConf.get('password'))
             if (UrlData['status'] == 200):
                 Ext = xFile.rsplit('.', maxsplit=1)[-1].lower()
                 try:
-                    self._UnpackData(UrlData['data'], Ext, DirApp)
+                    self._UnpackData(UrlData['data'], Ext, self.DirApp)
                 except Exception as E:
                     Log.Print(1, 'x', 'Err. Unzip', aE=E)
                     Res = False
@@ -107,10 +106,9 @@ class TApp():
 
         return Res
 
-    def _Remove(self, aFiles: list[str]):
-        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
+    def _RemoveFiles(self, aFiles: list[str]):
         for xFile in aFiles:
-            Path = f'{DirApp}/{xFile}'
+            Path = f'{self.DirApp}/{xFile}'
             if (os.path.exists(Path)):
                 if os.path.isfile(Path):
                     os.remove(Path)
@@ -118,83 +116,91 @@ class TApp():
                     DirRemove(Path)
 
     async def chk_update(self, aConf: dict):
-        DirApp = DeepGetByList(self.Conf, ['run', 'dir'])
-        if (not DirApp):
+        async def _GetRomoteVer(aUrl) -> dict:
+            Data = await UrlGetData(aUrl, aConf.get('login'), aConf.get('password'))
+            if (Data['status'] != 200):
+                Log.Print(1, 'i', f'Err. chk_update(). {self.DirApp}. Url {aUrl}, code {Data["status"]}')
+                return
+
+            try:
+                return json.loads(Data['data'])
+            except Exception as E:
+                Log.Print(1, 'x', f'Err. chk_update(). {self.DirApp}. Json format', aE=E)
+
+        def _GetLocalVer(aFile: str) -> str:
+            Res = ''
+            if (os.path.exists(aFile)):
+                with open(aFile, 'r', encoding='utf8') as F:
+                    try:
+                        Data = json.load(F)
+                        Res = DeepGetByList(Data, ['ver', 'release'], '').strip()
+                    except Exception as E:
+                        Log.Print(1, 'x', f'Err. chk_update(). {self.DirApp}. Json format', aE=E)
+            else:
+                Log.Print(1, 'i', f'Err. chk_update(). File not exists {aFile}')
+            return Res
+
+        if (not self.DirApp):
             Descr = DeepGetByList(self.Conf, ['info', 'descr'], '')
             Log.Print(1, 'i', f'Err. chk_update(). `run/dir` is undefined. {Descr}')
             return
 
-        if (not os.path.isdir(DirApp)):
-            Log.Print(1, 'i', f'Err. chk_update(). Dir not exists {DirApp}')
+        if (not os.path.isdir(self.DirApp)):
+            if (aConf.get('create_dir', False)):
+                os.makedirs(self.DirApp)
+            else:
+                Log.Print(1, 'i', f'Err. chk_update(). {self.DirApp}. Dir not exists')
+                return
+
+        Url = f'{aConf["url"]}/{self.FileVer}'
+        RemoteVer = await _GetRomoteVer(Url)
+        if (not RemoteVer):
+            return
+        RemoteVerNo = DeepGetByList(RemoteVer, ['ver', 'release'], '').strip()
+
+        File = f'{self.DirApp}/{self.FileVer}'
+        LocalVerNo = _GetLocalVer(File)
+        if (RemoteVerNo == LocalVerNo):
             return
 
-        File = f'{DirApp}/ver.json'
-        if (os.path.exists(File)):
-            #Log.Print(1, 'i', f'Err. Download(). File not found {File}')
-
-            with open(File, 'r', encoding='utf8') as F:
-                try:
-                    Data = json.load(F)
-                    CurVer = DeepGetByList(Data, ['ver', 'release'], '').strip()
-                except Exception as E:
-                    Log.Print(1, 'x', 'Err. chk_update(). Json format', aE=E)
-        else:
-            CurVer = '0.0.0'
-
-        UrlData = await UrlGetData(aConf['url'], aConf.get('login'), aConf.get('password'))
-        if (UrlData['status'] != 200):
-            Log.Print(1, 'i', f'Err. chk_update(). Url {aConf["url"]}, code {UrlData["status"]}')
-            return
-
-        try:
-            Remote = json.loads(UrlData['data'])
-        except Exception as E:
-            Log.Print(1, 'x', 'Err. chk_update(). Json format', aE=E)
-            return
-
-        LastVer = DeepGetByList(Remote, ['ver', 'release'], '').strip()
-        if (LastVer == CurVer):
-            return
-
-        Items = self._HasComment(Remote.get('unpack', []))
+        Items = self._HasComment(RemoteVer.get('unpack', []))
         if (not await self._Unpack(aConf, Items)):
             return
 
-        Items = self._HasComment(Remote.get('py_pkg', []))
+        Items = self._HasComment(RemoteVer.get('py_pkg', []))
         if (not self._PyPkg(Items)):
             return
 
-        Items = self._HasComment(Remote.get('remove', []))
-        self._Remove(Items)
+        Items = self._HasComment(RemoteVer.get('remove', []))
+        self._RemoveFiles(Items)
 
-        with open(File, 'w', encoding='utf8') as F:
-            Data = {'ver': Remote['ver']}
-            json.dump(Data, F)
-        Log.Print(1, 'i', f'chk_update(). Updated to {LastVer}')
+        Data = {'ver': RemoteVer['ver']}
+        WriteFileTyped(File, Data)
+        Log.Print(1, 'i', f'chk_update(). {self.DirApp}. Updated to {RemoteVerNo}')
 
         Action = aConf.get('action', '').lower()
         if (Action == 'stop'):
             Main = getattr(sys.modules['__main__'], '__file__')
             Path = os.path.dirname(Main)
-            if (DirApp == Path):
+            if (self.DirApp == Path):
                 Log.Print(1, 'i', f'Exit {Main}')
                 sys.exit()
             else:
                 await self.Stop()
 
     async def chk_run(self, aConf: dict):
-        Dir = aConf['dir']
-        if (not os.path.isdir(Dir)):
-            Log.Print(1, 'e', f'Err. chk_run(). Dir not exists {Dir}')
+        DirApp = aConf['dir']
+        if (not os.path.isdir(DirApp)):
+            Log.Print(1, 'e', f'Err. chk_run(). {DirApp}. Dir not exists')
             return
 
         if ('cmd' in aConf) and (not self.IsRun()):
             Cmd = re.split(r'\s+', aConf['cmd'])
-            Cmd[0] = f'{Dir}/{Cmd[0]}'
+            Cmd[0] = f'{DirApp}/{Cmd[0]}'
             try:
                 self.Process = subprocess.Popen(
                     Cmd,
-                    cwd=Dir,
+                    cwd=DirApp,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True
