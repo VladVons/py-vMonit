@@ -23,14 +23,15 @@
         },
         "watch_file": {
           "files": [
-            "{% run.dir %}/Crawler.sh"
+            "$checker.run.dir/vCrawler.log"
           ],
+          "action": "stop",
           "sleep": 10
         }
       }
     },
     {
-      "info": {
+      "common": {
         "descr": "vMonit itself",
         "enabled": true
       },

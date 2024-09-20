@@ -11,7 +11,8 @@ import tarfile
 from zipfile import ZipFile
 #
 from Inc.Misc.FS import DirRemove
-from Inc.Util.Obj import DeepGetByList
+from Inc.Misc.Template import TDictRepl
+from Inc.Util.Obj import DeepGetByList, DeepGet
 from IncP.Log import Log
 
 
@@ -47,9 +48,21 @@ def SysExec(aCmd: str):
         Log.Print(1, 'i', f'Err. SysExec(). {aCmd}')
 
 
+class TDictReplEx(TDictRepl):
+    def _VarTpl(self):
+        self.ReVar = re.compile(r'(\$[a-zA-Z.]+)')
+
+    def _Get(self, aFind: str) -> str:
+        aFind = aFind[1:]
+        Res = DeepGet(self.UserData, aFind)
+        assert(Res), f'Macros not found {aFind}'
+        return Res
+
+
 class TCheckBase():
     def __init__(self, aParent, aSect: str):
         self.Parent = aParent
+        self.Sect = aSect
         self.Conf = aParent.Conf['checker'][aSect]
 
         if (not 'sleep' in self.Conf):

@@ -20,7 +20,7 @@ ChkTable = {
 
 
 class TApp():
-    def __init__(self, aConf):
+    def __init__(self, aConf: dict):
         self.Conf = aConf
         self.FileVer = 'ver.json'
 

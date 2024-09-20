@@ -28,7 +28,7 @@ class TChkRun(TCheckBase):
             self.Process = None
             await asyncio.sleep(3)
 
-    async def Check(self):
+    async def _Check(self):
         DirApp = self.Conf['dir']
         if (not os.path.isdir(DirApp)):
             Log.Print(1, 'e', f'Err. chk_run(). {DirApp}. Dir not exists')
