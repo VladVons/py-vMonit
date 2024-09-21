@@ -12,7 +12,7 @@
           "login": "collector",
           "password": "col2024",
           "action": "stop",
-          "sleep": 360,
+          "sleep": 600,
           "create_dir": true
         },
         "run": {
@@ -25,8 +25,9 @@
           "files": [
             "$checker.run.dir/vCrawler.log"
           ],
-          "action": "stop",
-          "sleep": 10
+          "delay": 10,
+          "sleep": 300,
+          "action": "stop"
         }
       }
     },

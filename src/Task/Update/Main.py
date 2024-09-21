@@ -7,6 +7,7 @@ import asyncio
 #
 from Inc.Util.Obj import DeepGetByList
 from IncP.Log import Log
+#
 from . ChkUpdateUrl import TChkUpdateUrl
 from . ChkRun import TChkRun
 from . ChkWatchFile import TChkWatchFile
@@ -57,4 +58,4 @@ class TUpdate():
         while True:
             for xApp in self.Apps:
                 await xApp.CheckAll()
-                await asyncio.sleep(1)
+            await asyncio.sleep(1)

@@ -64,16 +64,25 @@ class TCheckBase():
         self.Parent = aParent
         self.Sect = aSect
         self.Conf = aParent.Conf['checker'][aSect]
+        self.Inited = False
 
         if (not 'sleep' in self.Conf):
             self.Conf['sleep'] = DeepGetByList(aParent.Conf, ['common', 'sleep'], 60)
         self.Timer = -self.Conf.get('delay', 2)
+
+    async def _Init(self):
+        pass
 
     async def _Check(self):
         raise NotImplementedError()
 
     async def Check(self):
         if (self.Timer == 0) or (self.Timer >= self.Conf['sleep']):
+            if (not self.Inited):
+                self.Inited = True
+                await self._Init()
+
             self.Timer = 0
             await self._Check()
         self.Timer += 1
+        pass
