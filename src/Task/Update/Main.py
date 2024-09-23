@@ -5,7 +5,7 @@
 
 import asyncio
 #
-from Inc.Util.Obj import DeepGetByList
+from Inc.Util.Dict import DeepGetByList
 from IncP.Log import Log
 #
 from . ChkUpdateUrl import TChkUpdateUrl

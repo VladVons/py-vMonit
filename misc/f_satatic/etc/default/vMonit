@@ -1,0 +1,6 @@
+# defaults for /etc/systemd/system/vMonit
+
+#CrawlerLogin="xxx"
+#CrawlerPassw="yyy"
+
+PYTHONPYCACHEPREFIX=/tmp/__pycache__

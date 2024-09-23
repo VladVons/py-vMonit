@@ -14,6 +14,7 @@ from .Common import TCheckBase
 class TChkRun(TCheckBase):
     def __init__(self, aParent):
         super().__init__(aParent, 'run')
+        self.DirApp = os.path.expanduser(self.Conf['dir'])
         self.Process = None
 
     def IsRun(self):
@@ -29,18 +30,17 @@ class TChkRun(TCheckBase):
             await asyncio.sleep(3)
 
     async def _Check(self):
-        DirApp = self.Conf['dir']
-        if (not os.path.isdir(DirApp)):
-            Log.Print(1, 'e', f'Err. chk_run(). {DirApp}. Dir not exists')
+        if (not os.path.isdir(self.DirApp)):
+            Log.Print(1, 'e', f'Err. chk_run(). {self.DirApp}. Dir not exists')
             return
 
         if ('cmd' in self.Conf) and (not self.IsRun()):
             Cmd = re.split(r'\s+', self.Conf['cmd'])
-            Cmd[0] = f'{DirApp}/{Cmd[0]}'
+            Cmd[0] = f'{self.DirApp}/{Cmd[0]}'
             try:
                 self.Process = subprocess.Popen(
                     Cmd,
-                    cwd=DirApp,
+                    cwd=self.DirApp,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True

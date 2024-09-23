@@ -9,7 +9,7 @@ import json
 #
 from Inc.Misc.aiohttpClient import UrlGetData
 from Inc.Misc.FS import WriteFileTyped
-from Inc.Util.Obj import DeepGetByList
+from Inc.Util.Dict import DeepGetByList
 from IncP.Log import Log
 from .Common import HasComment, RemoveFiles, SysExec, UnpackData, TCheckBase
 
@@ -17,7 +17,9 @@ from .Common import HasComment, RemoveFiles, SysExec, UnpackData, TCheckBase
 class TChkUpdateUrl(TCheckBase):
     def __init__(self, aParent):
         super().__init__(aParent, 'update')
+
         self.DirApp = DeepGetByList(aParent.Conf, ['checker', 'run', 'dir'])
+        self.DirApp = os.path.expanduser(self.DirApp)
         self.FileVer = 'ver.json'
 
     def _PyPkg(self, aPyPkg: list[str]) -> bool:

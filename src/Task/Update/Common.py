@@ -12,7 +12,7 @@ from zipfile import ZipFile
 #
 from Inc.Misc.FS import DirRemove
 from Inc.Misc.Template import TDictRepl
-from Inc.Util.Obj import DeepGetByList, DeepGet
+from Inc.Util.Dict import DeepGetByList, DeepGet
 from IncP.Log import Log
 
 

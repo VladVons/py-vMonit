@@ -16,7 +16,7 @@
           "create_dir": true
         },
         "run": {
-          "dir": "/root/projects/vCrawler",
+          "dir": "~/projects/vCrawler",
           "cmd": "vCrawler.sh",
           "sleep": 30,
           "delay": 5
@@ -45,7 +45,7 @@
           "sleep": 360
         },
         "run": {
-          "dir": "/root/projects/vMonit"
+          "dir": "~/projects/vMonit"
         }
       }
     }
