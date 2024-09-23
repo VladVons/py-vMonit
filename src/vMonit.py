@@ -5,17 +5,25 @@
 
 import asyncio
 #
-from IncP import GetSysInfo
+from Inc.Util.Dict import DictToText, Filter
+from Inc.Misc.Info import GetSysInfo
+from IncP import GetAppVer
 from IncP.Log import Log
 from Task.Main import TTask
 
 
 def Run():
-    Info = GetSysInfo()
     Log.Print(1, 'i', '')
-    Log.Print(1, 'i', f'os: {Info["os"]}, python: {Info["python"]}, user: {Info["user"]}, uptime: {Info["uptime"]}')
+
+    AppVer = DictToText(GetAppVer(), '; ')
+    Log.Print(1, 'i', f'{AppVer}')
+
+    SysInfo = GetSysInfo()
+    Data = DictToText(Filter(SysInfo, ['os', 'python', 'user', 'uptime']), '; ')
+    Log.Print(1, 'i', f'{Data}')
+
     PyNeed = (3, 10, 0)
-    if (Info['python'] >= PyNeed):
+    if (SysInfo['python'] >= PyNeed):
         Task = TTask().Run()
         asyncio.run(Task)
     else:
@@ -24,4 +32,3 @@ def Run():
 
 if (__name__ == '__main__'):
     Run()
-    pass
