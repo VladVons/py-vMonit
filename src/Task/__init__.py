@@ -46,5 +46,4 @@ Log.Print(1, 'i', f'Conf dir {DirConf}')
 
 ConfTask = TConf(f'{DirConf}/Task.py')
 ConfTask.Load()
-ConfTask.Def = {'env_smtp_passw': GetEnvWithWarn('env_smtp_passw', Log)}
 Plugin = TPluginTask('Task', DirConf)
