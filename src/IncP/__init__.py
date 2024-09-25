@@ -3,13 +3,13 @@
 #License:     GNU, see LICENSE for more details
 
 
-__version__ = '1.0.7'
-__date__ =  '2024.09.23'
+__version__ = '1.0.10'
+__date__ =  '2024.09.25'
 
 
 def GetAppVer() -> dict:
     return {
-        'app_name': 'vUpdate',
+        'app_name': 'vMonit',
         'app_ver' : __version__,
         'app_date': __date__,
         'author':  'Vladimir Vons, VladVons@gmail.com',

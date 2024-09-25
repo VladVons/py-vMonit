@@ -6,10 +6,12 @@
 import os
 import sys
 import json
+import asyncio
 #
 from Inc.Misc.aiohttpClient import UrlGetData
 from Inc.Misc.FS import WriteFileTyped
 from Inc.Util.Dict import DeepGetByList
+from Inc.Util.Obj import Iif
 from IncP.Log import Log
 from .Common import HasComment, RemoveFiles, SysExec, UnpackData, TCheckBase
 
@@ -121,7 +123,7 @@ class TChkUpdateUrl(TCheckBase):
         WriteFileTyped(File, Data)
         Log.Print(1, 'i', f'chk_update(). {self.DirApp}. Updated to {RemoteVerNo}')
 
-        Action = self.Conf.get('action', '').lower()
+        Action = Iif(RemoteVer.get('action'), RemoteVer.get('action'), self.Conf.get('action'))
         if (Action == 'stop'):
             Main = getattr(sys.modules['__main__'], '__file__')
             Path = os.path.dirname(Main)
@@ -130,3 +132,11 @@ class TChkUpdateUrl(TCheckBase):
                 sys.exit()
             else:
                 await self.Parent.Checkers['run'].Stop()
+        elif (Action == 'reboot'):
+            Delay = 5
+            Log.Print(1, 'i', f'chk_update(). {self.DirApp}. Reboot system in {Delay} seconds')
+            asyncio.sleep(Delay)
+            os.system('reboot')
+        else:
+            Log.Print(1, 'i', f'chk_update(). {self.DirApp}. Unknown action {Action}')
+
