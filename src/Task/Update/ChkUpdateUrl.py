@@ -10,8 +10,8 @@ import asyncio
 #
 from Inc.Misc.aiohttpClient import UrlGetData
 from Inc.Misc.FS import WriteFileTyped
-from Inc.Util.Dict import DeepGetByList
-from Inc.Util.Obj import Iif
+from Inc.Var.Dict import DeepGetByList
+from Inc.Var.Obj import Iif
 from IncP.Log import Log
 from .Common import HasComment, RemoveFiles, SysExec, UnpackData, TCheckBase
 

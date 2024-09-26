@@ -5,9 +5,9 @@
 
 import asyncio
 #
-from Inc.Util.Dict import DictToText, Filter
 from Inc.Misc.Info import GetSysInfo
 from Inc.Misc.Process import CheckSelfRunning
+from Inc.Var.Dict import DictToText, Filter
 from IncP import GetAppVer
 from IncP.Log import Log
 from Task.Main import TTask, App
