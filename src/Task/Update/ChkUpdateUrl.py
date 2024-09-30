@@ -136,6 +136,8 @@ class TChkUpdateUrl(TCheckBase):
             Delay = 5
             Log.Print(1, 'i', f'chk_update(). {self.DirApp}. Reboot system in {Delay} seconds')
             asyncio.sleep(Delay)
+            await self.Parent.Checkers['run'].Stop()
+            asyncio.sleep(Delay)
             os.system('reboot')
         else:
             Log.Print(1, 'i', f'chk_update(). {self.DirApp}. Unknown action {Action}')
